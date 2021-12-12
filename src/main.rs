@@ -1,6 +1,7 @@
 mod controller;
 mod driver;
 mod conf;
+mod model;
 
 use std::borrow::Borrow;
 use std::io::Write;
@@ -8,55 +9,62 @@ use std::path::PathBuf;
 use std::process::exit;
 use clap::Parser;
 use actix_web::{HttpServer, App, web, HttpResponse};
-use log::LevelFilter;
+use log::{LevelFilter, info, warn, error};
+use sqlx::{Any, Pool};
 use crate::controller::router::{api_router, admin_api_router};
 use crate::conf::{AppConfig, LogConfig};
+use crate::driver::db::{DatabaseDriver};
 
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
 struct Args {
     // The path to the configuration file
-    #[clap(short, long, parse(from_os_str), value_name = "PATH")]
-    config: Option<PathBuf>,
+    #[clap(short, long, parse(from_os_str), value_name = "PATH", default_value = "Config.toml")]
+    config: PathBuf,
     // Do an installation
     #[clap(short, long)]
     install: bool,
 }
 
+struct AppState {
+    db: Pool<Any>,
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let cmd = Args::parse();
+    let cmd: Args = Args::parse();
     // Read Configuration file
-    if cmd.config.is_none() {
-        eprintln!("No configuration file specified. Generated Config.toml for you.");
-        eprintln!("Please edit the file and restart the program.");
+    let conf = cmd.config;
+    // If the config file doesn't exist, generate one
+    let conf_file = conf.as_path();
+    if !conf_file.exists() {
         generate_config();
         exit(1);
     }
-    let conf = cmd.config.unwrap();
     let conf = AppConfig::from_file(&conf).expect("Failed to load config");
     // Setup logger
-    if  !setup_logger(conf.log.clone().borrow()) {
+    if  setup_logger(conf.log.clone().borrow()).is_err() {
         eprintln!("Failed to setup logger");
         exit(1);
     }
     // Setup misc
     // Setup database connection
-    let db = driver::db::new(conf.database.clone().borrow());
-
+    let db = driver::db::new_pool(conf.database.borrow()).await;
+    if db.is_err() {
+        eprintln!("Failed to connect to database");
+        exit(1);
+    }
+    let db = db.unwrap();
     // Setup cache
     // Setup global app state
-    // If install is true, run the installation
-    if cmd.install {
-        println!("Installing...");
-        exit(0);
-    }
     // Start Server
-    HttpServer::new(|| {
+    info!("Starting server at {}:{}", conf.host, conf.port);
+    HttpServer::new(move|| {
         App::new()
+            .app_data(AppState { db: db.clone() })
             .configure(configure)
     })
-        .bind("0.0.0.0:8000")?
+        .bind((conf.host, conf.port))?
         .run()
         .await
 }
@@ -92,16 +100,19 @@ fn setup_logger(conf: &Option<LogConfig>) -> Result<(), fern::InitError> {
         }
         None => { log::LevelFilter::Info }
     };
-    let info_out = fern::Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "{}[{}][{}] {}",
-                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
-                record.target(),
-                record.level(),
-                message
-            ))
-        })
+    let new_fern = || {
+        fern::Dispatch::new()
+            .format(|out, message, record| {
+                out.finish(format_args!(
+                    "{} [{}] [{}] {}",
+                    chrono::Local::now().format("[%Y-%m-%d-%H:%M:%S]"),
+                    record.target(),
+                    record.level(),
+                    message
+                ))
+            })
+    };
+    let info_out = new_fern()
         .level(level)
         .filter(|metadata| { metadata.level() <= log::LevelFilter::Info });
     match access_log {
@@ -116,16 +127,7 @@ fn setup_logger(conf: &Option<LogConfig>) -> Result<(), fern::InitError> {
     };
     match level {
         LevelFilter::Error | LevelFilter::Warn => {
-            let error_out = fern::Dispatch::new()
-                .format(|out, message, record| {
-                    out.finish(format_args!(
-                        "{}[{}][{}] {}",
-                        chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
-                        record.target(),
-                        record.level(),
-                        message
-                    ))
-                })
+            let error_out = new_fern()
                 .level(level)
                 .filter(|metadata| { metadata.level() <= log::LevelFilter::Warn });
             match error_log {
@@ -148,5 +150,5 @@ fn generate_config() {
     let mut config = std::env::current_dir().unwrap();
     config.push("Config.toml");
     let mut file = std::fs::File::create(config).unwrap();
-    file.write_all(include_bytes!("../layout/Config.toml")).unwrap();
+    file.write_all(include_bytes!("../resources/Config.toml")).unwrap();
 }

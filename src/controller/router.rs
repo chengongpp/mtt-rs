@@ -1,4 +1,5 @@
 use actix_web::{HttpResponse, web};
+use crate::controller::user::register;
 
 pub fn api_router(cfg: &mut web::ServiceConfig) {
     cfg
@@ -6,6 +7,7 @@ pub fn api_router(cfg: &mut web::ServiceConfig) {
             web::scope("/")
                 .service(web::resource("/").route(web::get().to(|| HttpResponse::Forbidden().body("Hacker!"))))
         )
+        .service(web::resource("/register").route(web::post().to(register)))
         .service(
             web::scope("/user")
                 .service(web::resource("/").route(web::get().to(|| HttpResponse::Ok().body("Hello World!"))))

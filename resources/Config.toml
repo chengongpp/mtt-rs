@@ -1,20 +1,22 @@
-[Config]
+host = "localhost"
+port = 8080
 
-Title = "MTT Platform"
-Host = "localhost"
-Port = "8080"
-
-[Authentication]
+[authentication]
 admin_user = "root"
 admin_password = "" # SHA256 hash
 
-[Database]
-#driver = "mysql" # or "postgres", "sqlite3"
-#url = "mysql://mtt:@localhost/mtt"
+[database]
+driver = "sqlite3" # or "postgres", "sqlite3"
+database = ":memory:"
+pool_size = 500
+user = "mtt"
+password = "mtt"
+host = "localhost"
+port = 3306
 #socket = "/var/run/mysqld/mysqld.sock"
 
 
-[Cache]
+[cache]
 #driver = "redis" # or "builtin", "tikv"
 host = "localhost"
 port = 6379
@@ -22,15 +24,16 @@ namespace = "mtt" # if driver is redis
 username = ""
 password = ""
 
-[Log]
+[log]
 access_log = "access.log"
 error_log = "error.log"
 level = "info"
 
-[Kubernetes]
+[kubernetes]
 secret = ""
 namespace = ""
 storage = ""
 
-[Custom]
+[custom]
+title = "MTT Platform"
 platform_name = "MTT Platform"

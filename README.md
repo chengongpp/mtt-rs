@@ -1,4 +1,4 @@
-# Miss The Target: A Vulnerability & CTF Platform or something idk
+# Miss The Target: A Pentest & CTF Platform or something idk
 
 You can construct vulnerable services, hold CTF challenges with this platform.
 

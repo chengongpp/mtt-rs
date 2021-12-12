@@ -5,9 +5,8 @@ use serde::{Deserialize};
 
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) struct AppConfig {
-    host: String,
-    port: u16,
-    directory: String,
+    pub(crate) host: String,
+    pub(crate) port: u16,
     pub(crate) authentication: AuthConfig,
     pub(crate) database: DatabaseConfig,
     pub(crate) cache: CacheConfig,
@@ -18,8 +17,14 @@ pub(crate) struct AppConfig {
 
 impl AppConfig {
     pub fn new(config: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let config: AppConfig = toml::from_str(config)?;
-        Ok(config)
+        let config= toml::from_str(config);
+        match config {
+            Ok(config) => Ok(config),
+            Err(e) => {
+                eprintln!("{:?}", e);
+                Err(Box::new(e))
+            },
+        }
     }
 
     pub fn from_file(path: &Path) -> Result<Self, Box<dyn std::error::Error>> {
@@ -37,8 +42,13 @@ pub struct AuthConfig {
 #[derive(Deserialize, Debug, Clone)]
 pub struct DatabaseConfig {
     pub(crate) driver: String,
-    pub(crate) url: String,
-    socket: Option<String>,
+    pub(crate) user: String,
+    pub(crate) password: String,
+    pub(crate) host: String,
+    pub(crate) port: u16,
+    pub(crate) database: String,
+    pub(crate) socket: Option<String>,
+    pub(crate) pool_size: u32,
 }
 
 #[derive(Deserialize, Debug, Clone)]
