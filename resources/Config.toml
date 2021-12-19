@@ -17,12 +17,13 @@ port = 3306
 
 
 [cache]
-#driver = "redis" # or "builtin", "tikv"
+#driver = "redis" # or "builtin"
 host = "localhost"
 port = 6379
 namespace = "mtt" # if driver is redis
 username = ""
 password = ""
+session_key = "0000FFFF0000FFFF" # 32 bytes, in hex
 
 [log]
 access_log = "access.log"

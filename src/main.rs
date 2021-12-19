@@ -7,6 +7,7 @@ use std::borrow::Borrow;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::exit;
+use actix_session::CookieSession;
 use clap::Parser;
 use actix_web::{HttpServer, App, web, HttpResponse};
 use log::{LevelFilter, info, warn, error};
@@ -43,7 +44,7 @@ async fn main() -> std::io::Result<()> {
     }
     let conf = AppConfig::from_file(&conf).expect("Failed to load config");
     // Setup logger
-    if  setup_logger(conf.log.clone().borrow()).is_err() {
+    if setup_logger(conf.log.clone().borrow()).is_err() {
         eprintln!("Failed to setup logger");
         exit(1);
     }
@@ -59,8 +60,9 @@ async fn main() -> std::io::Result<()> {
     // Setup global app state
     // Start Server
     info!("Starting server at {}:{}", conf.host, conf.port);
-    HttpServer::new(move|| {
+    HttpServer::new(move || {
         App::new()
+            .wrap(CookieSession::signed(&[0; 32]).secure(false))
             .app_data(AppState { db: db.clone() })
             .configure(configure)
     })

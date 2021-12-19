@@ -1,37 +1,34 @@
-use actix_web::{HttpResponse, web};
+use actix_session::Session;
+use actix_web::{HttpRequest, HttpResponse, web};
 use actix_web::error::Error;
 use sqlx::{Any, Pool};
-use model::user::{User, UserRegister, UserLogin};
+use crate::model::user::{User, UserRegister, UserLogin};
 
 pub async fn register(
-    user: UserRegister,
+    req: HttpRequest,
     pool: web::Data<Pool<Any>>,
 ) -> Result<HttpResponse, Error> {
     // TODO: captcha check
-    let conn = pool.get().await?;
-    let user = user.into_inner();
-    let user = User::new(user.username, user.password);
-    let user = user.register(&conn).await?;
-    Ok(HttpResponse::Ok().json(user))
+
+    Ok(HttpResponse::Ok().json(""))
 }
 
 pub async fn login(
-    user: UserLogin,
+    req: HttpRequest,
     pool: web::Data<Pool<Any>>,
 ) -> Result<HttpResponse, Error> {
-    let user = user.into_inner();
-    let user = User::new(user.username, user.password);
-    let conn = pool.get().await?;
-    let user = user.login(&conn).await?;
-    Ok(HttpResponse::Ok().json(user))
+    Ok(HttpResponse::Ok().json(""))
 }
 
 pub async fn modify(
-    user: User,
+    req: HttpRequest,
     pool: web::Data<Pool<Any>>,
 ) -> Result<HttpResponse, Error> {
-    let user = user.into_inner();
-    let conn = pool.get().await?;
-    Ok(HttpResponse::Ok().json(user))
+
+    Ok(HttpResponse::Ok().json(""))
 }
 
+pub async fn view(req: HttpRequest, pool: web::Data<Pool<Any>>) -> Result<HttpResponse, Error> {
+    unimplemented!();
+    Ok(HttpResponse::Ok().json(""))
+}
