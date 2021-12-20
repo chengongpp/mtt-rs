@@ -4,6 +4,7 @@ port = 8080
 [authentication]
 admin_user = "root"
 admin_password = "" # SHA256 hash
+force_phone = false
 
 [database]
 driver = "sqlite3" # or "postgres", "sqlite3"

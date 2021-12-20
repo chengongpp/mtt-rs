@@ -41,8 +41,12 @@ create table competition
 create table quiz
 (
     id          int auto_increment primary key not null,
+    competition_id int,
     name        varchar(32),
-    description varchar(32)
+    description varchar(32),
+    attachment_filename varchar(128),
+    attachment_url varchar(128),
+    foreign key (quiz_id) references competition (id)
 );
 
 create table flag
@@ -105,6 +109,14 @@ create table member_team
     team_id int,
     foreign key (user_id) references  user (id),
     foreign key (team_id) references  team (id)
+);
+
+create table competition_tags
+(
+    competition_id int,
+    tag_id        int,
+    foreign key (competition_id) references competition (id),
+    foreign key (tag_id) references tag (id)
 );
 
 create table quiz_tags

@@ -13,7 +13,7 @@ pub enum DatabaseError {
     InitError(String),
 }
 
-pub async fn new_pool(conf: &DatabaseConfig) -> Result<Pool<Any>, DatabaseError> {
+pub async fn new_db_pool(conf: &DatabaseConfig) -> Result<Pool<Any>, DatabaseError> {
     let driver = match conf.driver.to_lowercase().as_str() {
         "sqlite" | "sqlite3" => { Ok(DatabaseDriver::Sqlite) }
         "mysql" | "mariadb" => { Ok(DatabaseDriver::Mysql) }

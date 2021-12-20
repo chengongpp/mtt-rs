@@ -53,11 +53,13 @@ pub struct DatabaseConfig {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct CacheConfig {
-    host: String,
-    port: u16,
-    namespace: Option<String>,
-    username: Option<String>,
-    password: Option<String>
+    pub(crate) driver: String,
+    pub(crate) host: String,
+    pub(crate) port: u16,
+    pub(crate) cache_size: Option<u64>,
+    pub(crate) namespace: Option<String>,
+    pub(crate) username: Option<String>,
+    pub(crate) password: Option<String>
 }
 
 

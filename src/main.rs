@@ -50,7 +50,7 @@ async fn main() -> std::io::Result<()> {
     }
     // Setup misc
     // Setup database connection
-    let db = driver::db::new_pool(conf.database.borrow()).await;
+    let db = driver::db::new_db_pool(conf.database.borrow()).await;
     if db.is_err() {
         eprintln!("Failed to connect to database");
         exit(1);
